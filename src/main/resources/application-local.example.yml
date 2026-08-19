@@ -1,0 +1,18 @@
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/ticketing?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+        username: root
+        password: change-me
+
+# Generate with: openssl rand -base64 32
+security:
+    jwt:
+        secret-key: REPLACE_WITH_A_BASE64_ENCODED_32_BYTE_SECRET
+
+app:
+    cookie:
+        secure: false
+    cors:
+        allowed-origins:
+            - http://localhost:5173
