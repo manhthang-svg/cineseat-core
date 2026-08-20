@@ -41,7 +41,7 @@ Optional settings include access/refresh expiry, database pool sizes, issuer and
 
 ## Verification
 
-Run `mvn clean verify`. CI runs the same command and builds the container. Database integration tests should use MySQL Testcontainers as domain modules are added.
+Run `mvn clean verify` locally before committing changes. Database integration tests should use MySQL Testcontainers as domain modules are added.
 
 ## Operational endpoints
 

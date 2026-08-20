@@ -94,6 +94,7 @@ public class AuthServiceImpl implements AuthService {
         roles.add(userRole);
         Users user = Users.builder()
                 .username(username)
+                .email(username)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(roles)
                 .build();
