@@ -46,8 +46,7 @@ class JwtUtilsTest {
     void rejectsTamperedToken() {
         JwtUtils jwtUtils = jwtUtilsAt(NOW);
         String token = jwtUtils.generateToken("user@example.com");
-        String tampered = token.substring(0, token.length() - 1)
-                + (token.endsWith("a") ? "b" : "a");
+        String tampered = token.substring(0, token.length() - 6) + "abcdef";
 
         assertThatThrownBy(() -> jwtUtils.extractUsername(tampered))
                 .isInstanceOf(JwtException.class);
