@@ -39,6 +39,9 @@ public class SecurityConfig {
             "/api/auth/register",
             "/api/auth/refresh-token",
             "/api/auth/csrf",
+            "/api/movies/**",
+            "/api/cinemas/**",
+            "/api/rooms/**",
             "/actuator/health/**"
     };
 

@@ -6,6 +6,10 @@ UPDATE refresh_token
 SET token_hash = SHA2(token_hash, 256);
 
 -- A user may have independent sessions on multiple devices.
+-- MySQL requires another index to support the foreign key before the original
+-- unique user_id index can be removed.
+CREATE INDEX idx_refresh_token_user_id ON refresh_token(user_id);
+
 ALTER TABLE refresh_token
     DROP INDEX user_id,
     ADD COLUMN family_id CHAR(36) NULL AFTER token_hash,
@@ -21,4 +25,3 @@ ALTER TABLE refresh_token
     MODIFY COLUMN version BIGINT NOT NULL DEFAULT 0;
 
 CREATE INDEX idx_refresh_token_family_id ON refresh_token(family_id);
-CREATE INDEX idx_refresh_token_user_id ON refresh_token(user_id);
