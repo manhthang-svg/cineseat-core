@@ -17,7 +17,19 @@ public class UpdateCinemaRequest {
     @Size(max = 150, message = "Cinema name must not exceed 150 characters")
     private String name;
 
-    @NotBlank(message = "Cinema address must not be blank")
-    @Size(max = 500, message = "Cinema address must not exceed 500 characters")
-    private String address;
+    @NotBlank(message = "Province code must not be blank")
+    @Size(max = 20, message = "Province code must not exceed 20 characters")
+    private String provinceCode;
+
+    @NotBlank(message = "District code must not be blank")
+    @Size(max = 20, message = "District code must not exceed 20 characters")
+    private String districtCode;
+
+    @NotBlank(message = "Ward code must not be blank")
+    @Size(max = 20, message = "Ward code must not exceed 20 characters")
+    private String wardCode;
+
+    @NotBlank(message = "Detail address must not be blank")
+    @Size(max = 255, message = "Detail address must not exceed 255 characters")
+    private String detailAddress;
 }

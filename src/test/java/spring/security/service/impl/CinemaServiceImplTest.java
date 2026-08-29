@@ -9,11 +9,17 @@ import spring.security.dto.request.CreateCinemaRequest;
 import spring.security.dto.request.UpdateCinemaRequest;
 import spring.security.dto.response.CinemaResponse;
 import spring.security.entity.Cinema;
+import spring.security.entity.District;
+import spring.security.entity.Province;
+import spring.security.entity.Ward;
 import spring.security.enums.ErrorCode;
 import spring.security.exceptions.AppException;
 import spring.security.mapper.CinemaMapper;
 import spring.security.repository.CinemaRepository;
+import spring.security.repository.DistrictRepository;
+import spring.security.repository.ProvinceRepository;
 import spring.security.repository.RoomRepository;
+import spring.security.repository.WardRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,13 +39,50 @@ class CinemaServiceImplTest {
     @Mock
     private RoomRepository roomRepository;
     @Mock
+    private ProvinceRepository provinceRepository;
+    @Mock
+    private DistrictRepository districtRepository;
+    @Mock
+    private WardRepository wardRepository;
+    @Mock
     private CinemaMapper cinemaMapper;
 
     private CinemaServiceImpl cinemaService;
 
+    private Province province;
+    private District district;
+    private Ward ward;
+
     @BeforeEach
     void setUp() {
-        cinemaService = new CinemaServiceImpl(cinemaRepository, roomRepository, cinemaMapper);
+        cinemaService = new CinemaServiceImpl(
+                cinemaRepository,
+                roomRepository,
+                provinceRepository,
+                districtRepository,
+                wardRepository,
+                cinemaMapper
+        );
+
+        province = Province.builder()
+                .code("79")
+                .name("Hồ Chí Minh")
+                .fullName("Thành phố Hồ Chí Minh")
+                .build();
+
+        district = District.builder()
+                .code("765")
+                .name("Bình Thạnh")
+                .fullName("Quận Bình Thạnh")
+                .province(province)
+                .build();
+
+        ward = Ward.builder()
+                .code("26830")
+                .name("Phường 22")
+                .fullName("Phường 22")
+                .district(district)
+                .build();
     }
 
     @Test
@@ -85,7 +128,10 @@ class CinemaServiceImplTest {
     void createCinema_Success() {
         CreateCinemaRequest request = CreateCinemaRequest.builder()
                 .name("  CineVault Landmark  ")
-                .address("  123 Nguyen Hue  ")
+                .provinceCode("79")
+                .districtCode("765")
+                .wardCode("26830")
+                .detailAddress("  Tầng B1, Landmark 81  ")
                 .build();
 
         Cinema entity = new Cinema();
@@ -95,6 +141,9 @@ class CinemaServiceImplTest {
         CinemaResponse response = CinemaResponse.builder().id(1L).name("CineVault Landmark").build();
 
         when(cinemaRepository.existsByNameIgnoreCaseAndDeletedFalse("CineVault Landmark")).thenReturn(false);
+        when(provinceRepository.findById("79")).thenReturn(Optional.of(province));
+        when(districtRepository.findById("765")).thenReturn(Optional.of(district));
+        when(wardRepository.findById("26830")).thenReturn(Optional.of(ward));
         when(cinemaMapper.toEntity(request)).thenReturn(entity);
         when(cinemaRepository.save(entity)).thenReturn(saved);
         when(cinemaMapper.toResponse(saved)).thenReturn(response);
@@ -104,7 +153,11 @@ class CinemaServiceImplTest {
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("CineVault Landmark");
         assertThat(entity.getName()).isEqualTo("CineVault Landmark");
-        assertThat(entity.getAddress()).isEqualTo("123 Nguyen Hue");
+        assertThat(entity.getDetailAddress()).isEqualTo("Tầng B1, Landmark 81");
+        assertThat(entity.getAddress()).isEqualTo("Tầng B1, Landmark 81, Phường 22, Quận Bình Thạnh, Thành phố Hồ Chí Minh");
+        assertThat(entity.getProvince()).isEqualTo(province);
+        assertThat(entity.getDistrict()).isEqualTo(district);
+        assertThat(entity.getWard()).isEqualTo(ward);
         verify(cinemaRepository).save(entity);
     }
 
@@ -112,7 +165,10 @@ class CinemaServiceImplTest {
     void createCinema_DuplicateName_ThrowsException() {
         CreateCinemaRequest request = CreateCinemaRequest.builder()
                 .name("CineVault Landmark")
-                .address("123 Nguyen Hue")
+                .provinceCode("79")
+                .districtCode("765")
+                .wardCode("26830")
+                .detailAddress("Tầng B1, Landmark 81")
                 .build();
 
         when(cinemaRepository.existsByNameIgnoreCaseAndDeletedFalse("CineVault Landmark")).thenReturn(true);
@@ -125,11 +181,64 @@ class CinemaServiceImplTest {
     }
 
     @Test
+    void createCinema_InvalidDistrictProvinceHierarchy_ThrowsException() {
+        CreateCinemaRequest request = CreateCinemaRequest.builder()
+                .name("CineVault Landmark")
+                .provinceCode("01") // Ha Noi
+                .districtCode("765") // Binh Thanh in HCM
+                .wardCode("26830")
+                .detailAddress("Tầng B1")
+                .build();
+
+        Province hanoi = Province.builder().code("01").name("Hà Nội").fullName("Thành phố Hà Nội").build();
+
+        when(cinemaRepository.existsByNameIgnoreCaseAndDeletedFalse("CineVault Landmark")).thenReturn(false);
+        when(cinemaMapper.toEntity(request)).thenReturn(new Cinema());
+        when(provinceRepository.findById("01")).thenReturn(Optional.of(hanoi));
+        when(districtRepository.findById("765")).thenReturn(Optional.of(district));
+
+        assertThatThrownBy(() -> cinemaService.createCinema(request))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_ADDRESS_HIERARCHY);
+
+        verify(cinemaRepository, never()).save(any());
+    }
+
+    @Test
+    void createCinema_InvalidWardDistrictHierarchy_ThrowsException() {
+        CreateCinemaRequest request = CreateCinemaRequest.builder()
+                .name("CineVault Landmark")
+                .provinceCode("79")
+                .districtCode("765")
+                .wardCode("00340") // Thuong Dinh in Thanh Xuan
+                .detailAddress("Tầng B1")
+                .build();
+
+        District thanhXuan = District.builder().code("009").province(province).build();
+        Ward thuongDinh = Ward.builder().code("00340").district(thanhXuan).build();
+
+        when(cinemaRepository.existsByNameIgnoreCaseAndDeletedFalse("CineVault Landmark")).thenReturn(false);
+        when(cinemaMapper.toEntity(request)).thenReturn(new Cinema());
+        when(provinceRepository.findById("79")).thenReturn(Optional.of(province));
+        when(districtRepository.findById("765")).thenReturn(Optional.of(district));
+        when(wardRepository.findById("00340")).thenReturn(Optional.of(thuongDinh));
+
+        assertThatThrownBy(() -> cinemaService.createCinema(request))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_ADDRESS_HIERARCHY);
+
+        verify(cinemaRepository, never()).save(any());
+    }
+
+    @Test
     void updateCinema_Success() {
         Long cinemaId = 1L;
         UpdateCinemaRequest request = UpdateCinemaRequest.builder()
                 .name("CineVault Landmark Updated")
-                .address("456 Le Loi")
+                .provinceCode("79")
+                .districtCode("765")
+                .wardCode("26830")
+                .detailAddress("456 Le Loi")
                 .build();
 
         Cinema existing = new Cinema();
@@ -140,6 +249,9 @@ class CinemaServiceImplTest {
 
         when(cinemaRepository.findByIdAndDeletedFalse(cinemaId)).thenReturn(Optional.of(existing));
         when(cinemaRepository.existsByNameIgnoreCaseAndDeletedFalseAndIdNot("CineVault Landmark Updated", cinemaId)).thenReturn(false);
+        when(provinceRepository.findById("79")).thenReturn(Optional.of(province));
+        when(districtRepository.findById("765")).thenReturn(Optional.of(district));
+        when(wardRepository.findById("26830")).thenReturn(Optional.of(ward));
         when(cinemaRepository.save(existing)).thenReturn(saved);
         when(cinemaMapper.toResponse(saved)).thenReturn(response);
 
@@ -148,6 +260,7 @@ class CinemaServiceImplTest {
         assertThat(result).isNotNull();
         verify(cinemaMapper).updateEntityFromDto(request, existing);
         verify(cinemaRepository).save(existing);
+        assertThat(existing.getAddress()).isEqualTo("456 Le Loi, Phường 22, Quận Bình Thạnh, Thành phố Hồ Chí Minh");
     }
 
     @Test
