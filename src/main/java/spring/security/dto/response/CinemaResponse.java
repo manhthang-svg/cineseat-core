@@ -14,6 +14,13 @@ import java.time.Instant;
 public class CinemaResponse {
     private Long id;
     private String name;
+    private String provinceCode;
+    private String provinceName;
+    private String districtCode;
+    private String districtName;
+    private String wardCode;
+    private String wardName;
+    private String detailAddress;
     private String address;
     private Instant createdAt;
     private Instant updatedAt;

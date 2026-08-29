@@ -53,13 +53,23 @@ class AdminCinemaControllerTest {
     void createCinema_Success_Returns201() throws Exception {
         CreateCinemaRequest request = CreateCinemaRequest.builder()
                 .name("CineVault Central")
-                .address("123 Main Street")
+                .provinceCode("79")
+                .districtCode("765")
+                .wardCode("26830")
+                .detailAddress("123 Main Street")
                 .build();
 
         CinemaResponse response = CinemaResponse.builder()
                 .id(1L)
                 .name("CineVault Central")
-                .address("123 Main Street")
+                .provinceCode("79")
+                .provinceName("Thành phố Hồ Chí Minh")
+                .districtCode("765")
+                .districtName("Quận Bình Thạnh")
+                .wardCode("26830")
+                .wardName("Phường 22")
+                .detailAddress("123 Main Street")
+                .address("123 Main Street, Phường 22, Quận Bình Thạnh, Thành phố Hồ Chí Minh")
                 .build();
 
         when(cinemaService.createCinema(any(CreateCinemaRequest.class))).thenReturn(response);
@@ -70,7 +80,10 @@ class AdminCinemaControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(1))
-                .andExpect(jsonPath("$.data.name").value("CineVault Central"));
+                .andExpect(jsonPath("$.data.name").value("CineVault Central"))
+                .andExpect(jsonPath("$.data.provinceCode").value("79"))
+                .andExpect(jsonPath("$.data.districtCode").value("765"))
+                .andExpect(jsonPath("$.data.wardCode").value("26830"));
 
         verify(cinemaService).createCinema(any(CreateCinemaRequest.class));
     }
@@ -79,7 +92,10 @@ class AdminCinemaControllerTest {
     void createCinema_InvalidRequest_Returns400() throws Exception {
         CreateCinemaRequest request = CreateCinemaRequest.builder()
                 .name("")
-                .address("")
+                .provinceCode("")
+                .districtCode("")
+                .wardCode("")
+                .detailAddress("")
                 .build();
 
         mockMvc.perform(post("/api/admin/cinemas")
@@ -94,7 +110,10 @@ class AdminCinemaControllerTest {
         Long cinemaId = 1L;
         UpdateCinemaRequest request = UpdateCinemaRequest.builder()
                 .name("CineVault Central Updated")
-                .address("123 Main Street")
+                .provinceCode("79")
+                .districtCode("765")
+                .wardCode("26830")
+                .detailAddress("123 Main Street")
                 .build();
 
         CinemaResponse response = CinemaResponse.builder()

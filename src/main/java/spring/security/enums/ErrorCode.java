@@ -28,6 +28,10 @@ public enum ErrorCode {
     SEAT_NOT_FOUND("SEAT_001", "Ghế không tồn tại", HttpStatus.NOT_FOUND),
     SEAT_ALREADY_EXISTS("SEAT_002", "Vị trí ghế đã tồn tại trong phòng chiếu này", HttpStatus.CONFLICT),
     SEAT_HAS_BOOKINGS("SEAT_003", "Không thể xóa ghế đã có lịch sử đặt vé", HttpStatus.CONFLICT),
+    PROVINCE_NOT_FOUND("ADDR_001", "Tỉnh/Thành phố không tồn tại", HttpStatus.NOT_FOUND),
+    DISTRICT_NOT_FOUND("ADDR_002", "Quận/Huyện không tồn tại", HttpStatus.NOT_FOUND),
+    WARD_NOT_FOUND("ADDR_003", "Phường/Xã không tồn tại", HttpStatus.NOT_FOUND),
+    INVALID_ADDRESS_HIERARCHY("ADDR_004", "Phân cấp địa chỉ không hợp lệ", HttpStatus.BAD_REQUEST),
     UNCATEGORIZED_EXCEPTION("SYS_999", "Lỗi hệ thống nội bộ, vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
