@@ -9,6 +9,8 @@ import spring.security.enums.MovieSort;
 public interface MovieService {
     PageResponse<MovieResponse> browse(String query, int page, int size, MovieSort sort);
 
+    MovieResponse getMovieById(Long id);
+
     MovieResponse createMovie(CreateMovieRequest request);
 
     MovieResponse updateMovie(Long id, UpdateMovieRequest request);

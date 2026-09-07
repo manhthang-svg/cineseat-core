@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,5 +35,11 @@ public class MovieController {
             @RequestParam(defaultValue = "LATEST") MovieSort sort
     ) {
         return ApiResponse.success(movieService.browse(query, page, size, sort));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get movie details by ID")
+    public ApiResponse<MovieResponse> getMovieById(@PathVariable Long id) {
+        return ApiResponse.success(movieService.getMovieById(id));
     }
 }

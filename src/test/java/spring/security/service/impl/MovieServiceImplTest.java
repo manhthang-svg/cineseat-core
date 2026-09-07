@@ -264,4 +264,41 @@ class MovieServiceImplTest {
 
         verify(movieRepository, never()).save(any());
     }
+
+    @Test
+    void getMovieById_Success() {
+        Long movieId = 1L;
+        Movie movie = new Movie();
+        movie.setId(movieId);
+        movie.setTitle("Dune: Part Two");
+        movie.setStatus(MovieStatus.ACTIVE);
+
+        MovieResponse response = MovieResponse.builder()
+                .id(movieId)
+                .title("Dune: Part Two")
+                .status(MovieStatus.ACTIVE)
+                .build();
+
+        when(movieRepository.findByIdAndDeletedFalse(movieId)).thenReturn(Optional.of(movie));
+        when(movieMapper.toResponse(movie)).thenReturn(response);
+
+        MovieResponse result = movieService.getMovieById(movieId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(movieId);
+        assertThat(result.getTitle()).isEqualTo("Dune: Part Two");
+        verify(movieRepository).findByIdAndDeletedFalse(movieId);
+    }
+
+    @Test
+    void getMovieById_NotFound_ThrowsException() {
+        Long movieId = 99L;
+        when(movieRepository.findByIdAndDeletedFalse(movieId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> movieService.getMovieById(movieId))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MOVIE_NOT_FOUND);
+
+        verify(movieRepository).findByIdAndDeletedFalse(movieId);
+    }
 }
