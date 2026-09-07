@@ -1,6 +1,7 @@
 package spring.security.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.security.dto.response.DistrictResponse;
@@ -26,6 +27,7 @@ public class AddressServiceImpl implements AddressService {
     private final AddressMapper addressMapper;
 
     @Override
+    @Cacheable(value = "provinces",key = "'all'")
     @Transactional(readOnly = true)
     public List<ProvinceResponse> getProvinces() {
         return provinceRepository.findAllByOrderByNameAsc()
@@ -36,7 +38,8 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DistrictResponse> getDistrictsByProvince(String provinceCode) {
+    @Cacheable(value = "districts", key = "#provinceCode")
+    public List<DistrictResponse>  getDistrictsByProvince(String provinceCode) {
         if (!provinceRepository.existsById(provinceCode)) {
             throw new AppException(ErrorCode.PROVINCE_NOT_FOUND);
         }
@@ -48,6 +51,7 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "wards", key = "#districtCode")
     public List<WardResponse> getWardsByDistrict(String districtCode) {
         if (!districtRepository.existsById(districtCode)) {
             throw new AppException(ErrorCode.DISTRICT_NOT_FOUND);

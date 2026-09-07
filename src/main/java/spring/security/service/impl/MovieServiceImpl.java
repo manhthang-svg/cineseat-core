@@ -1,6 +1,9 @@
 package spring.security.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +51,12 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "movie_details", key = "#id"),
+                    @CacheEvict(value = "movie_list", allEntries = true)
+            }
+    )
     public MovieResponse updateMovie(Long id, UpdateMovieRequest request) {
         Movie movie = movieRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new AppException(ErrorCode.MOVIE_NOT_FOUND));
@@ -81,6 +90,7 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "movie_list",key = "{#query,#page,#size,#sort}")
     public PageResponse<MovieResponse> browse(String query, int page, int size, MovieSort sort) {
         String normalizedQuery = query == null ? "" : query.trim();
         Pageable pageable = PageRequest.of(page, size, sortFor(sort));
@@ -93,6 +103,15 @@ public class MovieServiceImpl implements MovieService {
                 .map(movieMapper::toResponse);
 
         return PageResponse.from(movies);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "movie_details", key = "#id")
+    public MovieResponse getMovieById(Long id) {
+        return movieRepository.findByIdAndDeletedFalse(id)
+                .map(movieMapper::toResponse)
+                .orElseThrow(() -> new AppException(ErrorCode.MOVIE_NOT_FOUND));
     }
 
     private Sort sortFor(MovieSort sort) {
