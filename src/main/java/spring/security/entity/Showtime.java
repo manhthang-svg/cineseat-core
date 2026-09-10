@@ -7,8 +7,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 @Entity
@@ -18,6 +17,9 @@ import java.time.Instant;
         @Index(name = "idx_showtimes_movie_start", columnList = "movie_id,start_time"),
         @Index(name = "idx_showtimes_room_start", columnList = "room_id,start_time")
 })
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Showtime extends AbstractEntity {
 
     @Column(name = "start_time", nullable = false)
