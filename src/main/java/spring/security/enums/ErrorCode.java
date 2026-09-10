@@ -32,6 +32,8 @@ public enum ErrorCode {
     DISTRICT_NOT_FOUND("ADDR_002", "Quận/Huyện không tồn tại", HttpStatus.NOT_FOUND),
     WARD_NOT_FOUND("ADDR_003", "Phường/Xã không tồn tại", HttpStatus.NOT_FOUND),
     INVALID_ADDRESS_HIERARCHY("ADDR_004", "Phân cấp địa chỉ không hợp lệ", HttpStatus.BAD_REQUEST),
+    OVERLAP_SHOWTIME_EXCEPTION("SHOWTIME_001", "Suất chiếu bị trùng lịch với một suất chiếu khác", HttpStatus.CONFLICT),
+    INVALID_SHOWTIME_TIME("SHOWTIME_002", "Thời gian kết thúc phải sau thời gian bắt đầu", HttpStatus.BAD_REQUEST),
     UNCATEGORIZED_EXCEPTION("SYS_999", "Lỗi hệ thống nội bộ, vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
