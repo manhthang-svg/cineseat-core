@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spring.security.dto.request.CreateShowtimeRequest;
 import spring.security.dto.response.CreateShowtimeResponse;
+import spring.security.dto.response.ShowtimeViewResponse;
 import spring.security.entity.Movie;
 import spring.security.entity.Room;
 import spring.security.entity.Showtime;
@@ -18,6 +19,7 @@ import spring.security.repository.RoomRepository;
 import spring.security.repository.ShowtimeRepository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -127,6 +129,57 @@ class ShowtimeServiceImplTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.OVERLAP_SHOWTIME_EXCEPTION);
 
         verify(showtimeRepository, never()).save(any());
+    }
+
+    @Test
+    void getMovieShowtimes_Success() {
+        Instant from = Instant.parse("2026-09-20T00:00:00Z");
+        Instant to = Instant.parse("2026-09-27T00:00:00Z");
+        Showtime showtime = new Showtime();
+        showtime.setId(10L);
+        ShowtimeViewResponse response = ShowtimeViewResponse.builder()
+                .id(10L)
+                .cinemaId(1L)
+                .cinemaName("CineVault Landmark 81")
+                .roomId(2L)
+                .roomName("Cinema 2")
+                .startTime(Instant.parse("2026-09-20T03:00:00Z"))
+                .endTime(Instant.parse("2026-09-20T05:00:00Z"))
+                .build();
+
+        when(movieRepository.existsByIdAndDeletedFalse(1L)).thenReturn(true);
+        when(showtimeRepository.findAvailableByMovieAndStartTimeBetween(1L, from, to))
+                .thenReturn(List.of(showtime));
+        when(showtimeMapper.toViewResponse(showtime)).thenReturn(response);
+
+        List<ShowtimeViewResponse> result = showtimeService.getMovieShowtimes(1L, from, to);
+
+        assertThat(result).containsExactly(response);
+    }
+
+    @Test
+    void getMovieShowtimes_MovieNotFound_Throws404Error() {
+        Instant from = Instant.parse("2026-09-20T00:00:00Z");
+        Instant to = Instant.parse("2026-09-27T00:00:00Z");
+        when(movieRepository.existsByIdAndDeletedFalse(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> showtimeService.getMovieShowtimes(99L, from, to))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MOVIE_NOT_FOUND);
+
+        verify(showtimeRepository, never()).findAvailableByMovieAndStartTimeBetween(any(), any(), any());
+    }
+
+    @Test
+    void getMovieShowtimes_RangeLongerThan31Days_ThrowsBeforeDatabaseAccess() {
+        Instant from = Instant.parse("2026-09-01T00:00:00Z");
+        Instant to = Instant.parse("2026-10-03T00:00:00Z");
+
+        assertThatThrownBy(() -> showtimeService.getMovieShowtimes(1L, from, to))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_SHOWTIME_RANGE);
+
+        verify(movieRepository, never()).existsByIdAndDeletedFalse(any());
     }
 
     private CreateShowtimeRequest request(String startTime, String endTime) {

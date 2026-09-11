@@ -12,11 +12,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
 import spring.security.dto.response.ApiResponse;
 import spring.security.dto.response.MovieResponse;
 import spring.security.dto.response.PageResponse;
+import spring.security.dto.response.ShowtimeViewResponse;
 import spring.security.enums.MovieSort;
 import spring.security.service.MovieService;
+import spring.security.service.ShowtimeService;
+
+import java.time.Instant;
+import java.util.List;
 
 @Validated
 @RestController
@@ -25,6 +31,7 @@ import spring.security.service.MovieService;
 @Tag(name = "Movies", description = "Public movie discovery APIs")
 public class MovieController {
     private final MovieService movieService;
+    private final ShowtimeService showtimeService;
 
     @GetMapping
     @Operation(summary = "Browse active movies")
@@ -41,5 +48,15 @@ public class MovieController {
     @Operation(summary = "Get movie details by ID")
     public ApiResponse<MovieResponse> getMovieById(@PathVariable Long id) {
         return ApiResponse.success(movieService.getMovieById(id));
+    }
+
+    @GetMapping("/{id}/showtimes")
+    @Operation(summary = "Get available showtimes for a movie in a time range")
+    public ApiResponse<List<ShowtimeViewResponse>> getMovieShowtimes(
+            @PathVariable Long id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to
+    ) {
+        return ApiResponse.success(showtimeService.getMovieShowtimes(id, from, to));
     }
 }
