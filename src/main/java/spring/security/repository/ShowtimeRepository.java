@@ -18,6 +18,20 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
     @Query("""
             SELECT s
             FROM Showtime s
+            JOIN FETCH s.movie m
+            JOIN FETCH s.room r
+            JOIN FETCH r.cinema c
+            WHERE s.id = :id
+              AND s.deleted = false
+              AND m.deleted = false
+              AND r.deleted = false
+              AND c.deleted = false
+            """)
+    java.util.Optional<Showtime> findByIdWithDetails(@Param("id") Long id);
+
+    @Query("""
+            SELECT s
+            FROM Showtime s
             JOIN FETCH s.room r
             JOIN FETCH r.cinema c
             WHERE s.movie.id = :movieId
