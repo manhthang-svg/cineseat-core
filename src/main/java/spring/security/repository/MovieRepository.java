@@ -19,6 +19,8 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     Optional<Movie> findByIdAndDeletedFalse(Long id);
 
+    boolean existsByIdAndDeletedFalse(Long id);
+
     boolean existsByTitleIgnoreCaseAndDeletedFalse(String title);
 
     boolean existsByTitleIgnoreCaseAndDeletedFalseAndIdNot(String title, Long id);

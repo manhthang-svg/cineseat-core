@@ -4,6 +4,10 @@ spring:
         url: jdbc:mysql://localhost:3306/ticketing?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
         username: root
         password: change-me
+    jpa:
+        properties:
+            hibernate:
+                format_sql: true
 
 # Generate with: openssl rand -base64 32
 security:
@@ -16,3 +20,8 @@ app:
     cors:
         allowed-origins:
             - http://localhost:5173
+
+logging:
+    level:
+        org.hibernate.SQL: DEBUG
+        org.hibernate.orm.jdbc.bind: TRACE

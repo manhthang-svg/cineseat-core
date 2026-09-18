@@ -10,13 +10,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import spring.security.dto.response.MovieResponse;
 import spring.security.dto.response.PageResponse;
+import spring.security.dto.response.ShowtimeViewResponse;
 import spring.security.enums.ErrorCode;
 import spring.security.enums.MovieSort;
 import spring.security.enums.MovieStatus;
 import spring.security.exceptions.AppException;
 import spring.security.exceptions.GlobalException;
 import spring.security.service.MovieService;
+import spring.security.service.ShowtimeService;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -35,6 +38,9 @@ class MovieControllerTest {
 
     @Mock
     private MovieService movieService;
+
+    @Mock
+    private ShowtimeService showtimeService;
 
     @InjectMocks
     private MovieController movieController;
@@ -106,5 +112,32 @@ class MovieControllerTest {
         mockMvc.perform(get("/api/movies/{id}", movieId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(ErrorCode.MOVIE_NOT_FOUND.getCode()));
+    }
+
+    @Test
+    void getMovieShowtimes_Success_Returns200() throws Exception {
+        Instant from = Instant.parse("2026-09-20T00:00:00Z");
+        Instant to = Instant.parse("2026-09-27T00:00:00Z");
+        ShowtimeViewResponse response = ShowtimeViewResponse.builder()
+                .id(10L)
+                .startTime(Instant.parse("2026-09-20T03:00:00Z"))
+                .endTime(Instant.parse("2026-09-20T05:00:00Z"))
+                .roomId(2L)
+                .roomName("Cinema 2 (Dolby Atmos)")
+                .cinemaId(1L)
+                .cinemaName("CineVault Landmark 81")
+                .cinemaAddress("Bình Thạnh, TP. Hồ Chí Minh")
+                .build();
+
+        when(showtimeService.getMovieShowtimes(1L, from, to)).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/api/movies/{id}/showtimes", 1L)
+                        .param("from", from.toString())
+                        .param("to", to.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].id").value(10))
+                .andExpect(jsonPath("$.data[0].cinemaName").value("CineVault Landmark 81"))
+                .andExpect(jsonPath("$.data[0].roomName").value("Cinema 2 (Dolby Atmos)"));
     }
 }
